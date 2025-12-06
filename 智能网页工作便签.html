@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能网页工作便签 - 霞鹜臻楷版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入霞鹜臻楷字体 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.6.0/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'LXGW WenKai', '霞鹜臻楷', '楷体', 'STKaiti', 'KaiTi', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            font-weight: 400;
+        }
+        
+        /* 页面加载动画 */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        
+        .page-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loader-circle {
+            width: 80px;
+            height: 80px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1.5s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .loader-text {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            animation: pulse 1.5s infinite alternate;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+        
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.7s ease-out 0.7s both;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes slideDown {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .title-icon {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            font-weight: 400;
+            animation: fadeIn 1s ease-out 1s both;
+            letter-spacing: 0.5px;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 0.9; }
+        }
+        
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .sidebar {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            height: fit-content;
+            animation: slideInLeft 0.8s ease-out 0.9s both;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        @keyframes slideInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .main-content {
+            flex: 2;
+            min-width: 300px;
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.8s ease-out 1s both;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        @keyframes slideInRight {
+            0% {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            color: #2575fc;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .note-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #555;
+            font-size: 1.05rem;
+            letter-spacing: 0.3px;
+        }
+        
+        input, textarea, select {
+            padding: 14px 16px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            transition: all 0.3s;
+            font-weight: 400;
+            background-color: #fdfdfd;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2575fc;
+            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.15);
+            transform: translateY(-2px);
+            background-color: white;
+        }
+        
+        textarea {
+            min-height: 140px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+        
+        .color-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            animation: popIn 0.5s ease-out backwards;
+        }
+        
+        .color-option:nth-child(1) { animation-delay: 1.1s; }
+        .color-option:nth-child(2) { animation-delay: 1.2s; }
+        .color-option:nth-child(3) { animation-delay: 1.3s; }
+        .color-option:nth-child(4) { animation-delay: 1.4s; }
+        .color-option:nth-child(5) { animation-delay: 1.5s; }
+        
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            80% {
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.1) rotate(0);
+            animation: pulseColor 1.5s infinite alternate;
+        }
+        
+        @keyframes pulseColor {
+            0% { box-shadow: 0 0 0 0 rgba(37, 117, 252, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(37, 117, 252, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 117, 252, 0); }
+        }
+        
+        .btn {
+            padding: 14px 22px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .btn:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+        
+        .btn-primary {
+            background-color: #2575fc;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1c64e0;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(37, 117, 252, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .notes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .note {
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            animation: noteAppear 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        @keyframes noteAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .note-removing {
+            animation: noteRemove 0.4s ease-in forwards !important;
+        }
+        
+        @keyframes noteRemove {
+            0% {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(100px) scale(0.8);
+            }
+        }
+        
+        .note:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .note.completed {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+        
+        .note.completed:hover {
+            transform: translateY(-5px) scale(0.99);
+        }
+        
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .note-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #333;
+            margin-right: 10px;
+            word-break: break-word;
+            line-height: 1.3;
+            letter-spacing: 0.3px;
+        }
+        
+        .note-category {
+            font-size: 0.85rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background-color: rgba(0, 0, 0, 0.08);
+            font-weight: 600;
+            animation: categoryPulse 2s infinite alternate;
+            letter-spacing: 0.5px;
+        }
+        
+        @keyframes categoryPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+        
+        .note-content {
+            flex-grow: 1;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            overflow: hidden;
+            word-break: break-word;
+            font-size: 1.05rem;
+            letter-spacing: 0.2px;
+        }
+        
+        .note-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            font-size: 0.9rem;
+            color: #777;
+        }
+        
+        .note-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #777;
+            transition: all 0.3s;
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn:hover {
+            color: #2575fc;
+            background-color: rgba(37, 117, 252, 0.1);
+            transform: rotate(15deg) scale(1.1);
+        }
+        
+        .action-btn.delete-note:hover {
+            color: #ff4757;
+            background-color: rgba(255, 71, 87, 0.1);
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: rotate(0) scale(1.1); }
+            25% { transform: rotate(-10deg) scale(1.1); }
+            75% { transform: rotate(10deg) scale(1.1); }
+        }
+        
+        .action-btn.complete-note:hover {
+            color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .reminder-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: #ff4757;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 3px 8px rgba(255, 71, 87, 0.3);
+            animation: badgePulse 2s infinite;
+            z-index: 2;
+            letter-spacing: 0.3px;
+        }
+        
+        @keyframes badgePulse {
+            0% { box-shadow: 0 3px 8px rgba(255, 71, 87, 0.3); }
+            50% { box-shadow: 0 3px 15px rgba(255, 71, 87, 0.6); }
+            100% { box-shadow: 0 3px 8px rgba(255, 71, 87, 0.3); }
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            padding: 18px;
+            border-radius: 12px;
+            margin-top: 20px;
+            animation: fadeIn 1s ease-out 1.6s both;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-item {
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2575fc;
+            transition: all 0.3s;
+        }
+        
+        .stat-item:hover .stat-value {
+            transform: scale(1.2);
+            text-shadow: 0 5px 10px rgba(37, 117, 252, 0.2);
+        }
+        
+        .stat-label {
+            font-size: 0.95rem;
+            color: #666;
+            margin-top: 5px;
+            letter-spacing: 0.3px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.8s ease-out 1.2s both;
+        }
+        
+        .search-box input {
+            flex-grow: 1;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.8s ease-out 1.3s both;
+        }
+        
+        .filter-btn {
+            padding: 9px 18px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        .filter-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(37, 117, 252, 0.2);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .filter-btn:active::before {
+            animation: ripple 0.6s ease-out;
+        }
+        
+        .filter-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filter-btn.active {
+            background-color: #2575fc;
+            color: white;
+            border-color: #2575fc;
+            animation: activeFilter 0.5s ease-out;
+        }
+        
+        @keyframes activeFilter {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #777;
+            grid-column: 1 / -1;
+            animation: fadeIn 1s ease-out;
+        }
+        
+        .empty-state i {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #ddd;
+            animation: float 3s infinite ease-in-out;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+            letter-spacing: 0.3px;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(37, 117, 252, 0.5);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(37, 117, 252, 0.8);
+        }
+        
+        /* 纸张纹理效果 */
+        .note {
+            background-image: 
+                linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
+                linear-gradient(#eee .1em, transparent .1em);
+            background-size: 100% 1.2em;
+            background-position: 0 0.6em;
+        }
+        
+        /* 为不同颜色的便签去除默认纹理 */
+        .note[style*="background-color: #fff9c4"] {
+            background-image: none;
+        }
+        
+        .note[style*="background-color: #c8e6c9"] {
+            background-image: none;
+        }
+        
+        .note[style*="background-color: #bbdefb"] {
+            background-image: none;
+        }
+        
+        .note[style*="background-color: #ffcdd2"] {
+            background-image: none;
+        }
+        
+        .note[style*="background-color: #f0f0f0"] {
+            background-image: none;
+        }
+        
+        /* 标题装饰效果 */
+        .note-title {
+            position: relative;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+        
+        .note-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background-color: rgba(37, 117, 252, 0.5);
+            transition: width 0.3s ease;
+        }
+        
+        .note:hover .note-title::after {
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .notes-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.6rem;
+            }
+        }
+        
+        /* 粒子背景效果 */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            animation: floatParticle 15s infinite linear;
+        }
+        
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* 毛笔笔触效果 */
+        .brush-stroke {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.05;
+            z-index: -1;
+        }
+        
+        /* 印章效果 */
+        .seal {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 0.7rem;
+            color: rgba(0, 0, 0, 0.2);
+            font-weight: 700;
+            letter-spacing: 1px;
+            transform: rotate(-5deg);
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-circle"></div>
+        <div class="loader-text">智能便签加载中...</div>
+    </div>
+    
+    <!-- 粒子背景 -->
+    <div class="particles" id="particlesContainer"></div>
+    
+    <!-- 毛笔笔触装饰 -->
+    <div class="brush-stroke" id="brushStrokes"></div>
+    
+    <div class="container">
+        <header>
+            <h1>
+                <i class="fas fa-sticky-note title-icon"></i>
+                智能工作便签
+            </h1>
+            <p class="subtitle">采用霞鹜臻楷字体 · 记录任务、设置提醒、管理工作事项</p>
+        </header>
+        
+        <div class="app-container">
+            <div class="sidebar">
+                <h2 class="section-title"><i class="fas fa-plus-circle"></i> 新建便签</h2>
+                <form id="noteForm" class="note-form">
+                    <div class="form-group">
+                        <label for="noteTitle">标题</label>
+                        <input type="text" id="noteTitle" placeholder="输入便签标题..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="noteContent">内容</label>
+                        <textarea id="noteContent" placeholder="输入便签内容..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="noteCategory">分类</label>
+                        <select id="noteCategory">
+                            <option value="工作">工作</option>
+                            <option value="个人">个人</option>
+                            <option value="学习">学习</option>
+                            <option value="购物">购物</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>颜色</label>
+                        <div class="color-options">
+                            <div class="color-option selected" style="background-color: #fff9c4;" data-color="#fff9c4"></div>
+                            <div class="color-option" style="background-color: #c8e6c9;" data-color="#c8e6c9"></div>
+                            <div class="color-option" style="background-color: #bbdefb;" data-color="#bbdefb"></div>
+                            <div class="color-option" style="background-color: #ffcdd2;" data-color="#ffcdd2"></div>
+                            <div class="color-option" style="background-color: #f0f0f0;" data-color="#f0f0f0"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reminderDate">提醒时间 (可选)</label>
+                        <input type="datetime-local" id="reminderDate">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存便签
+                    </button>
+                </form>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalNotes">0</div>
+                        <div class="stat-label">总便签</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="activeNotes">0</div>
+                        <div class="stat-label">进行中</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="reminderNotes">0</div>
+                        <div class="stat-label">有提醒</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="搜索便签...">
+                    <button id="clearSearch" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 清除
+                    </button>
+                </div>
+                
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="all">全部</button>
+                    <button class="filter-btn" data-filter="工作">工作</button>
+                    <button class="filter-btn" data-filter="个人">个人</button>
+                    <button class="filter-btn" data-filter="学习">学习</button>
+                    <button class="filter-btn" data-filter="有提醒">有提醒</button>
+                </div>
+                
+                <h2 class="section-title"><i class="fas fa-sticky-note"></i> 我的便签</h2>
+                
+                <div class="notes-container" id="notesContainer">
+                    <!-- 便签将通过JS动态生成 -->
+                    <div class="empty-state" id="emptyState">
+                        <i class="fas fa-clipboard"></i>
+                        <h3>暂无便签</h3>
+                        <p>点击左侧表单创建你的第一个便签</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let notes = JSON.parse(localStorage.getItem('smartNotes')) || [];
+        let selectedColor = '#fff9c4';
+        let currentFilter = 'all';
+        
+        // DOM 元素
+        const pageLoader = document.getElementById('pageLoader');
+        const noteForm = document.getElementById('noteForm');
+        const notesContainer = document.getElementById('notesContainer');
+        const emptyState = document.getElementById('emptyState');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const colorOptions = document.querySelectorAll('.color-option');
+        const brushStrokes = document.getElementById('brushStrokes');
+        
+        // 统计元素
+        const totalNotesEl = document.getElementById('totalNotes');
+        const activeNotesEl = document.getElementById('activeNotes');
+        const reminderNotesEl = document.getElementById('reminderNotes');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 隐藏页面加载动画
+            setTimeout(() => {
+                pageLoader.classList.add('hidden');
+            }, 1500);
+            
+            // 创建粒子背景
+            createParticles();
+            
+            // 创建毛笔笔触装饰
+            createBrushStrokes();
+            
+            loadNotes();
+            updateStats();
+            checkReminders();
+            
+            // 设置最小日期时间为当前时间
+            const now = new Date();
+            const formattedNow = now.toISOString().slice(0, 16);
+            document.getElementById('reminderDate').min = formattedNow;
+            
+            // 每30秒检查一次提醒
+            setInterval(checkReminders, 30000);
+        });
+        
+        // 创建粒子背景
+        function createParticles() {
+            const particlesContainer = document.getElementById('particlesContainer');
+            const particleCount = 25;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // 随机大小
+                const size = Math.random() * 15 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // 随机位置
+                particle.style.left = `${Math.random() * 100}vw`;
+                
+                // 随机动画延迟和持续时间
+                const delay = Math.random() * 15;
+                const duration = Math.random() * 10 + 15;
+                particle.style.animationDelay = `${delay}s`;
+                particle.style.animationDuration = `${duration}s`;
+                
+                // 随机透明度
+                const opacity = Math.random() * 0.08 + 0.03;
+                particle.style.opacity = opacity;
+                
+                // 随机颜色
+                const colors = ['#6a11cb', '#2575fc', '#ffffff'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.backgroundColor = color;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // 创建毛笔笔触装饰
+        function createBrushStrokes() {
+            const strokeCount = 5;
+            
+            for (let i = 0; i < strokeCount; i++) {
+                const stroke = document.createElement('div');
+                stroke.classList.add('brush-stroke');
+                
+                // 随机位置和大小
+                const width = Math.random() * 200 + 100;
+                const height = Math.random() * 30 + 10;
+                stroke.style.width = `${width}px`;
+                stroke.style.height = `${height}px`;
+                stroke.style.top = `${Math.random() * 100}vh`;
+                stroke.style.left = `${Math.random() * 100}vw`;
+                
+                // 随机旋转角度
+                const rotation = Math.random() * 360;
+                stroke.style.transform = `rotate(${rotation}deg)`;
+                
+                // 随机背景颜色
+                const opacity = Math.random() * 0.03 + 0.01;
+                stroke.style.backgroundColor = `rgba(37, 117, 252, ${opacity})`;
+                
+                // 随机边框半径
+                stroke.style.borderRadius = '50%';
+                
+                brushStrokes.appendChild(stroke);
+            }
+        }
+        
+        // 颜色选择
+        colorOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                colorOptions.forEach(opt => {
+                    opt.classList.remove('selected');
+                    opt.style.animation = 'none';
+                    // 触发重绘以重新启动动画
+                    void opt.offsetWidth;
+                });
+                this.classList.add('selected');
+                selectedColor = this.getAttribute('data-color');
+                
+                // 添加点击动画
+                this.style.transform = 'scale(1.3) rotate(15deg)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1.1) rotate(0)';
+                }, 300);
+            });
+        });
+        
+        // 表单提交 - 创建新便签
+        noteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            const category = document.getElementById('noteCategory').value;
+            const reminder = document.getElementById('reminderDate').value;
+            
+            if (!title || !content) {
+                showNotification('请填写标题和内容', 'warning');
+                // 添加表单错误动画
+                document.getElementById('noteTitle').style.animation = 'shake 0.5s';
+                document.getElementById('noteContent').style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    document.getElementById('noteTitle').style.animation = '';
+                    document.getElementById('noteContent').style.animation = '';
+                }, 500);
+                return;
+            }
+            
+            const note = {
+                id: Date.now(),
+                title,
+                content,
+                category,
+                color: selectedColor,
+                reminder: reminder || null,
+                createdAt: new Date().toISOString(),
+                completed: false
+            };
+            
+            // 添加便签到数组开头
+            notes.unshift(note);
+            saveNotes();
+            loadNotes();
+            updateStats();
+            
+            // 重置表单
+            noteForm.reset();
+            document.getElementById('reminderDate').value = '';
+            
+            // 重置颜色选择
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            colorOptions[0].classList.add('selected');
+            selectedColor = '#fff9c4';
+            
+            // 显示成功消息
+            showNotification('便签已成功添加！', 'success');
+            
+            // 添加保存按钮动画
+            const submitBtn = noteForm.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-check"></i> 已保存';
+            submitBtn.style.backgroundColor = '#4CAF50';
+            setTimeout(() => {
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> 保存便签';
+                submitBtn.style.backgroundColor = '';
+            }, 1500);
+        });
+        
+        // 搜索功能
+        searchInput.addEventListener('input', function() {
+            // 添加搜索动画
+            if (this.value.trim()) {
+                this.style.transform = 'scale(1.02)';
+                this.style.boxShadow = '0 5px 15px rgba(37, 117, 252, 0.2)';
+            } else {
+                this.style.transform = '';
+                this.style.boxShadow = '';
+            }
+            
+            loadNotes();
+        });
+        
+        // 清除搜索
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.style.transform = '';
+            searchInput.style.boxShadow = '';
+            
+            // 添加清除动画
+            this.style.transform = 'rotate(90deg)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 300);
+            
+            loadNotes();
+        });
+        
+        // 过滤功能
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.getAttribute('data-filter');
+                loadNotes();
+            });
+        });
+        
+        // 加载便签
+        function loadNotes() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            // 过滤便签
+            let filteredNotes = notes.filter(note => {
+                const matchesSearch = note.title.toLowerCase().includes(searchTerm) || 
+                                     note.content.toLowerCase().includes(searchTerm);
+                
+                const matchesFilter = currentFilter === 'all' || 
+                                     (currentFilter === '有提醒' ? note.reminder : note.category === currentFilter);
+                
+                return matchesSearch && matchesFilter;
+            });
+            
+            // 清空容器
+            notesContainer.innerHTML = '';
+            
+            // 显示空状态或便签
+            if (filteredNotes.length === 0) {
+                notesContainer.appendChild(emptyState);
+                emptyState.style.display = 'block';
+                emptyState.style.animation = 'fadeIn 1s ease-out';
+            } else {
+                emptyState.style.display = 'none';
+                
+                // 按创建时间倒序排列
+                filteredNotes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                
+                // 创建便签元素
+                filteredNotes.forEach((note, index) => {
+                    const noteElement = createNoteElement(note);
+                    // 为每个便签设置延迟动画
+                    noteElement.style.animationDelay = `${index * 0.05}s`;
+                    notesContainer.appendChild(noteElement);
+                });
+            }
+        }
+        
+        // 创建便签元素
+        function createNoteElement(note) {
+            const noteEl = document.createElement('div');
+            noteEl.className = 'note';
+            noteEl.style.backgroundColor = note.color;
+            
+            if (note.completed) {
+                noteEl.classList.add('completed');
+            }
+            
+            // 如果有提醒并且提醒时间还没到，添加提醒标记
+            let reminderBadge = '';
+            if (note.reminder && new Date(note.reminder) > new Date()) {
+                const reminderTime = new Date(note.reminder).toLocaleString('zh-CN', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                reminderBadge = `<div class="reminder-badge" title="提醒时间: ${reminderTime}">
+                                    <i class="fas fa-bell"></i> ${reminderTime}
+                                </div>`;
+            }
+            
+            // 完成状态标记
+            const completionIcon = note.completed ? 
+                '<i class="fas fa-check-circle" style="color:#4CAF50;"></i>' : 
+                '<i class="far fa-circle" style="color:#777;"></i>';
+            
+            // 创建印章文本
+            const sealText = note.completed ? '已完成' : '进行中';
+            
+            noteEl.innerHTML = `
+                ${reminderBadge}
+                <div class="note-header">
+                    <div class="note-title">${note.title}</div>
+                    <div class="note-category">${note.category}</div>
+                </div>
+                <div class="note-content">${note.content.replace(/\n/g, '<br>')}</div>
+                <div class="note-footer">
+                    <div>${new Date(note.createdAt).toLocaleDateString('zh-CN')}</div>
+                    <div class="note-actions">
+                        <button class="action-btn complete-note" data-id="${note.id}" title="${note.completed ? '标记为未完成' : '标记为完成'}">
+                            ${completionIcon}
+                        </button>
+                        <button class="action-btn delete-note" data-id="${note.id}" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="seal">${sealText}</div>
+            `;
+            
+            // 添加事件监听器
+            noteEl.querySelector('.delete-note').addEventListener('click', function() {
+                deleteNote(note.id);
+            });
+            
+            noteEl.querySelector('.complete-note').addEventListener('click', function() {
+                toggleNoteCompletion(note.id);
+            });
+            
+            return noteEl;
+        }
+        
+        // 删除便签
+        function deleteNote(id) {
+            const noteElement = document.querySelector(`.note .delete-note[data-id="${id}"]`)?.closest('.note');
+            
+            if (noteElement) {
+                // 添加删除动画
+                noteElement.classList.add('note-removing');
+                
+                setTimeout(() => {
+                    if (confirm('确定要删除这个便签吗？')) {
+                        notes = notes.filter(note => note.id !== id);
+                        saveNotes();
+                        loadNotes();
+                        updateStats();
+                        showNotification('便签已删除', 'info');
+                    } else {
+                        // 取消删除，移除动画类
+                        noteElement.classList.remove('note-removing');
+                        noteElement.style.animation = 'noteAppear 0.5s ease-out';
+                    }
+                }, 300);
+            }
+        }
+        
+        // 切换完成状态
+        function toggleNoteCompletion(id) {
+            const noteElement = document.querySelector(`.note .complete-note[data-id="${id}"]`)?.closest('.note');
+            const button = document.querySelector(`.complete-note[data-id="${id}"]`);
+            
+            if (noteElement && button) {
+                // 添加点击动画
+                button.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    button.style.transform = '';
+                }, 300);
+                
+                // 切换完成状态
+                notes = notes.map(note => {
+                    if (note.id === id) {
+                        return {...note, completed: !note.completed};
+                    }
+                    return note;
+                });
+                
+                saveNotes();
+                loadNotes();
+                updateStats();
+                
+                const note = notes.find(n => n.id === id);
+                showNotification(`便签已标记为${note.completed ? '完成' : '未完成'}`, note.completed ? 'success' : 'info');
+            }
+        }
+        
+        // 检查提醒
+        function checkReminders() {
+            const now = new Date();
+            
+            notes.forEach(note => {
+                if (note.reminder && new Date(note.reminder) <= now && !note.completed) {
+                    // 如果提醒时间已到且便签未完成
+                    showNotification(`提醒: "${note.title}"`, 'reminder');
+                    
+                    // 移除已触发的提醒
+                    note.reminder = null;
+                }
+            });
+            
+            saveNotes();
+            loadNotes();
+            updateStats();
+        }
+        
+        // 保存便签到本地存储
+        function saveNotes() {
+            localStorage.setItem('smartNotes', JSON.stringify(notes));
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            // 添加统计数字变化动画
+            animateCounter(totalNotesEl, notes.length);
+            animateCounter(activeNotesEl, notes.filter(note => !note.completed).length);
+            animateCounter(reminderNotesEl, notes.filter(note => note.reminder && new Date(note.reminder) > new Date()).length);
+        }
+        
+        // 数字计数器动画
+        function animateCounter(element, targetValue) {
+            const currentValue = parseInt(element.textContent) || 0;
+            const duration = 500; // 动画持续时间（毫秒）
+            const stepTime = Math.max(Math.floor(duration / Math.abs(targetValue - currentValue)), 20);
+            let current = currentValue;
+            
+            const timer = setInterval(() => {
+                if (current < targetValue) {
+                    current++;
+                } else if (current > targetValue) {
+                    current--;
+                } else {
+                    clearInterval(timer);
+                    return;
+                }
+                
+                element.textContent = current;
+                
+                // 添加缩放动画
+                element.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    element.style.transform = 'scale(1)';
+                }, 100);
+                
+            }, stepTime);
+        }
+        
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            // 移除现有的通知
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // 图标映射
+            const icons = {
+                success: 'fa-check-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle',
+                reminder: 'fa-bell'
+            };
+            
+            // 颜色映射
+            const colors = {
+                success: '#4CAF50',
+                warning: '#FF9800',
+                info: '#2196F3',
+                reminder: '#FF4757'
+            };
+            
+            // 创建新通知
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas ${icons[type] || icons.success}"></i>
+                <span>${message}</span>
+            `;
+            
+            // 样式
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: ${colors[type] || colors.success};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out, bounce 0.5s ease-out 0.3s;
+                font-weight: 500;
+                max-width: 350px;
+                font-size: 1.05rem;
+                letter-spacing: 0.3px;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+            
+            // 添加动画关键帧
+            if (!document.querySelector('#notification-styles')) {
+                const styleEl = document.createElement('style');
+                styleEl.id = 'notification-styles';
+                styleEl.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOut {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                    @keyframes bounce {
+                        0%, 100% { transform: translateX(0); }
+                        25% { transform: translateX(-10px); }
+                        50% { transform: translateX(0); }
+                        75% { transform: translateX(-5px); }
+                    }
+                `;
+                document.head.appendChild(styleEl);
+            }
+        }
+        
+        // 添加一些示例便签
+        function addSampleNotes() {
+            if (notes.length === 0) {
+                const sampleNotes = [
+                    {
+                        id: 1,
+                        title: '项目会议',
+                        content: '下午三时与开发团队讨论新功能需求\n需准备演示文稿及项目时间表\n会议室：A301',
+                        category: '工作',
+                        color: '#bbdefb',
+                        reminder: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+                        createdAt: new Date(Date.now() - 86400000).toISOString(),
+                        completed: false
+                    },
+                    {
+                        id: 2,
+                        title: '购买食材',
+                        content: '牛奶、鸡蛋、面包、水果、蔬菜\n记得购买有机产品\n超市营业时间至晚八时',
+                        category: '购物',
+                        color: '#c8e6c9',
+                        reminder: null,
+                        createdAt: new Date(Date.now() - 172800000).toISOString(),
+                        completed: true
+                    },
+                    {
+                        id: 3,
+                        title: '学习计划',
+                        content: '完成JavaScript高级课程\n阅读React文档第五章\n练习算法题目三题',
+                        category: '学习',
+                        color: '#fff9c4',
+                        reminder: new Date(Date.now() + 259200000).toISOString().slice(0, 16),
+                        createdAt: new Date(Date.now() - 259200000).toISOString(),
+                        completed: false
+                    },
+                    {
+                        id: 4,
+                        title: '读书笔记',
+                        content: '《深入浅出Node.js》第三章笔记\n异步编程的核心概念\n事件循环机制详解',
+                        category: '学习',
+                        color: '#ffcdd2',
+                        reminder: new Date(Date.now() + 432000000).toISOString().slice(0, 16),
+                        createdAt: new Date(Date.now() - 345600000).toISOString(),
+                        completed: false
+                    }
+                ];
+                
+                notes = sampleNotes;
+                saveNotes();
+                loadNotes();
+                updateStats();
+            }
+        }
+        
+        // 页面加载时添加示例便签（仅当没有便签时）
+        addSampleNotes();
+    </script>
+</body>
+</html>
